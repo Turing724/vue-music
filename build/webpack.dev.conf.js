@@ -9,47 +9,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const portfinder = require('portfinder');
-const express = require('express');
-const axios = require('axios');
-const opn = require('opn');
 const HOST = process.env.HOST;
 const PORT = process.env.PORT && Number(process.env.PORT);
-
-const app = express();
-
-app.all('*', function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  //Access-Control-Allow-Headers ,可根据浏览器的F12查看,把对应的粘贴在这里就行
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Methods', '*');
-  res.header('Content-Type', 'application/json;charset=utf-8');
-  next();
-});
-
-const apiRoutes = express.Router();
-// console.log(apiRoutes);
-
-apiRoutes.get('/getDiscList', (req, res) => {
-  // console.log('req', req);
-  var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg';
-  axios
-    .get(url, {
-      headers: {
-        referer: 'https://c.y.qq.com/',
-        host: 'c.y.qq.com'
-      },
-      params: req.query
-    })
-    .then(response => {
-      res.json(response.data);
-    })
-    .catch(e => {
-      console.log(e);
-    });
-});
-app.use('/api', apiRoutes);
-
-const server = app.listen('8083');
+require('../proxy-server');
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
     rules: utils.styleLoaders({ sourceMap: config.dev.cssSourceMap, usePostCSS: true })
