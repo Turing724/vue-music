@@ -1,6 +1,7 @@
 <template>
   <div id="singer">
-    歌手页面
+    <Listview :data="singers">
+    </Listview>
   </div>
 </template>
 <script>
@@ -26,8 +27,7 @@ export default {
     _getSingerList() {
       getSingerList().then(res => {
         if (res.code === ERR_OK) {
-          this.singers = res.data.list;
-          console.log(this._normalizeSinger(this.singers));
+          this.singers = this._normalizeSinger(res.data.list);
         }
       });
     },
@@ -38,7 +38,9 @@ export default {
           items: []
         }
       };
+      // console.log(list);
       list.forEach((item, index) => {
+        // console.log(item);
         if (index < HOT_SINGER_LEN) {
           map.hot.items.push(
             new Singer({
@@ -47,7 +49,6 @@ export default {
             })
           );
         }
-        // console.log(map);
         const key = item.Findex;
         if (!map[key]) {
           map[key] = {
@@ -62,11 +63,13 @@ export default {
           })
         );
       });
+
       // 使列表有序化
       let hot = [];
       let ret = [];
       for (let key in map) {
         let val = map[key];
+        // console.log(val);
         if (val.title.match(/[a-zA-Z]/)) {
           ret.push(val);
         } else if (val.title === HOT_NAME) {
@@ -82,7 +85,7 @@ export default {
 };
 </script>
 <style lang="stylus" scoped>
-.singer {
+#singer {
   position: fixed;
   top: 88px;
   bottom: 0;
