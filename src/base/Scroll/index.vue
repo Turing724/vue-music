@@ -41,6 +41,7 @@ export default {
         this.$nextTick(() => {
           this.scroll.on('scroll', pos => {
             me.$emit('scroll', pos);
+            // console.log(pos, 'pos');
           });
         });
       }

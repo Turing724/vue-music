@@ -1,5 +1,5 @@
 export default class Song {
-  constructor({ id, mid, singer, name, album, duration, image, url }) {
+  constructor({ id, mid, singer, name, album, duration, image, url, songType }) {
     this.id = id;
     this.img = mid;
     this.singer = singer;
@@ -8,6 +8,8 @@ export default class Song {
     this.duration = duration;
     this.image = image;
     this.url = url;
+    this.songmid = mid;
+    this.songType = songType;
   }
 }
 
@@ -20,7 +22,8 @@ export function createSong(musicData) {
     album: musicData.albumname,
     duration: musicData.interval,
     image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
-    url: `http://ws.stream.qqmusic.qq.com/${musicData.songid}.m4a?fromtag=46`
+    url: `http://ws.stream.qqmusic.qq.com/${musicData.songid}.m4a?fromtag=46`,
+    songType: musicData.songtype
   });
 }
 

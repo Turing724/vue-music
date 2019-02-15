@@ -1,5 +1,6 @@
 import jsonp from 'common/js/jsonp';
 import { commonParams, options } from './config';
+import axios from 'axios';
 export function getSingerList() {
   const url = 'https://c.y.qq.com/v8/fcg-bin/v8.fcg';
 
@@ -32,4 +33,11 @@ export function getSingerDetail(id) {
   });
 
   return jsonp(url, data, options);
+}
+
+export function getSingerUrl(ops) {
+  const url = 'http://192.168.10.246:8000/api/v1/get_music_play_url/';
+  return axios.get(url, {
+    params: ops
+  });
 }
