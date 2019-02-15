@@ -26,14 +26,14 @@
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left">
-              <i class="icon-prev"></i>
+            <div class="icon i-left" :class="disableCls">
+              <i @click="prev" class="icon-prev"></i>
             </div>
-            <div class="icon i-center">
+            <div class="icon i-center" :class="disableCls">
               <i @click="togglePlaying" :class="playIcon"></i>
             </div>
-            <div class="icon i-right">
-              <i class="icon-next"></i>
+            <div class="icon i-right" :class="disableCls">
+              <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
               <i class="icon icon-not-favorite"></i>
@@ -59,7 +59,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong">
+    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong" @error="error">
       <source v-for="(item,index) in playUrl" :src="item" :key="index" />
     </audio>
   </div>
@@ -102,7 +102,9 @@ export default {
           cv: 0
         }
       },
-      playUrl: []
+      playUrl: [],
+      songReady: false,
+      currentTime: 0
     };
   },
   computed: {
@@ -115,7 +117,10 @@ export default {
     cdCls() {
       return this.playing ? 'play' : 'play pause';
     },
-    ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing'])
+    disableCls() {
+      return this.songReady ? '' : 'disable';
+    },
+    ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing', 'currentIndex'])
   },
   methods: {
     back() {
@@ -210,23 +215,64 @@ export default {
         this.playUrl = playUrl;
       });
     },
+    // 播放歌曲
     playSong() {
+      this.songReady = true;
       this.$nextTick(() => {
         this.$refs.audio.play();
       });
     },
+    // 歌曲播放报错
+    error() {
+      this.songReady = true;
+    },
     // 暂停歌曲
     pauseSong() {
+      this.songReady = true;
       this.$nextTick(() => {
         this.$refs.audio.pause();
       });
     },
     togglePlaying() {
+      if (!this.songReady) {
+        return;
+      }
       this.setPlayingState(!this.playing);
+    },
+    // 歌曲前进
+    prev() {
+      if (!this.songReady) {
+        return;
+      }
+      let index = this.currentIndex - 1;
+      if (index === -1) {
+        index = this.playList.length - 1;
+      }
+      this.setCurrentIndex(index);
+      if (!this.playing) {
+        this.togglePlaying();
+      }
+      this.songReady = false;
+    },
+    // 歌曲后退
+    next() {
+      if (!this.songReady) {
+        return;
+      }
+      let index = this.currentIndex + 1;
+      if (index === this.playList.length) {
+        index = 0;
+      }
+      this.setCurrentIndex(index);
+      if (!this.playing) {
+        this.togglePlaying();
+      }
+      this.songReady = false;
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
-      setPlayingState: 'SET_PLAYING_STATE'
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
     })
   },
   watch: {
