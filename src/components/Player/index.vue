@@ -15,7 +15,7 @@
         <div class="middle">
           <div class="middle-l">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd">
+              <div class="cd" :class="cdCls">
                 <img :src="currentSong.image" alt="" class="image">
               </div>
             </div>
@@ -30,7 +30,7 @@
               <i class="icon-prev"></i>
             </div>
             <div class="icon i-center">
-              <i @click="togglePlaying" class="icon-play"></i>
+              <i @click="togglePlaying" :class="playIcon"></i>
             </div>
             <div class="icon i-right">
               <i class="icon-next"></i>
@@ -45,13 +45,15 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <img :src="currentSong.image" alt="" width="40" height="40">
+          <img :class="cdCls" :src="currentSong.image" alt="" width="40" height="40">
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control"></div>
+        <div class="control">
+          <i :class="miniIcon" @click.stop="togglePlaying"></i>
+        </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
@@ -104,6 +106,15 @@ export default {
     };
   },
   computed: {
+    playIcon() {
+      return this.playing ? 'icon-pause' : 'icon-play';
+    },
+    miniIcon() {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini';
+    },
+    cdCls() {
+      return this.playing ? 'play' : 'play pause';
+    },
     ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing'])
   },
   methods: {
@@ -197,12 +208,17 @@ export default {
           );
         });
         this.playUrl = playUrl;
-        console.log(this.playUrl, 'this.playUrl');
       });
     },
     playSong() {
       this.$nextTick(() => {
         this.$refs.audio.play();
+      });
+    },
+    // 暂停歌曲
+    pauseSong() {
+      this.$nextTick(() => {
+        this.$refs.audio.pause();
       });
     },
     togglePlaying() {
@@ -215,7 +231,6 @@ export default {
   },
   watch: {
     currentSong(val) {
-      console.log(val, '_getSingerUrl');
       this.$set(this.params, 'songtype', [val.songType]);
       this.$set(this.params, 'songmid', [val.songmid]);
       this.$nextTick(() => {
@@ -223,10 +238,11 @@ export default {
       });
     },
     playing(newVal) {
-      const audio = this.$refs.audio;
-      this.$nextTick(() => {
-        newVal ? this.playSong() : audio.pause();
-      });
+      if (this.$refs.audio) {
+        this.$nextTick(() => {
+          newVal ? this.playSong() : this.pauseSong();
+        });
+      }
     }
   }
 };
