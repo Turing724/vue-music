@@ -22,6 +22,13 @@
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent"></progress-bar>
+            </div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
@@ -59,7 +66,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong" @error="error">
+    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong" @error="error" @timeupdate="updateTime">
       <source v-for="(item,index) in playUrl" :src="item" :key="index" />
     </audio>
   </div>
@@ -72,8 +79,12 @@ import { getSingerUrl } from 'api/singer';
 import getGuid from '../../utils/guid.js';
 import cookie from '../../utils/cookie.js';
 import musicKey from '../../utils/music_key.js';
+import progressBar from 'base/progressBar';
 const transform = prefixStyle('transform');
 export default {
+  components: {
+    progressBar
+  },
   data() {
     return {
       params: {
@@ -119,6 +130,9 @@ export default {
     },
     disableCls() {
       return this.songReady ? '' : 'disable';
+    },
+    percent() {
+      return this.currentTime / this.currentSong.duration;
     },
     ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing', 'currentIndex'])
   },
@@ -268,6 +282,24 @@ export default {
         this.togglePlaying();
       }
       this.songReady = false;
+    },
+    // 当前播放时间 实现播放进度
+    updateTime(e) {
+      this.currentTime = e.target.currentTime;
+    },
+    format(interval) {
+      interval = interval | 0;
+      const minute = (interval / 60) | 0;
+      const second = this._pad(interval % 60);
+      return `${minute}:${second}`;
+    },
+    _pad(num, n = 2) {
+      let len = num.toString().length;
+      while (len < n) {
+        num = '0' + num;
+        len++;
+      }
+      return num;
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
