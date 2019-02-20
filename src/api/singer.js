@@ -36,7 +36,7 @@ export function getSingerDetail(id) {
 }
 
 export function getSingerUrl(ops) {
-  const url = 'http://192.168.10.246:8000/api/v1/get_music_play_url/';
+  const url = 'http://192.168.10.246:8000/v1/api/get_music_play_url/';
   return axios.get(url, {
     params: ops
   });
