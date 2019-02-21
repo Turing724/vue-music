@@ -59,7 +59,9 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <i :class="miniIcon" @click.stop="togglePlaying"></i>
+          <progress-circle :radius="radius" :percent="percent">
+            <i :class="miniIcon" @click.stop="togglePlaying" class="icon-mini"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
@@ -80,10 +82,12 @@ import getGuid from '../../utils/guid.js';
 import cookie from '../../utils/cookie.js';
 import musicKey from '../../utils/music_key.js';
 import progressBar from 'base/progressBar';
+import progressCircle from 'base/progressCircle';
 const transform = prefixStyle('transform');
 export default {
   components: {
-    progressBar
+    progressBar,
+    progressCircle
   },
   data() {
     return {
@@ -115,7 +119,8 @@ export default {
       },
       playUrl: [],
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      radius: 32
     };
   },
   computed: {
