@@ -31,7 +31,7 @@
           </div>
           <div class="operators">
             <div class="icon i-left">
-              <i class="icon-sequence"></i>
+              <i :class="iconMode" @click="changeMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
               <i @click="prev" class="icon-prev"></i>
@@ -68,7 +68,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong" @error="error" @timeupdate="updateTime">
+    <audio ref="audio" :src="playUrl[0]" v-if="playUrl.length>0" @canplay="playSong" @error="error" @timeupdate="updateTime" @ended="end">
       <source v-for="(item,index) in playUrl" :src="item" :key="index" />
     </audio>
   </div>
@@ -83,6 +83,8 @@ import cookie from '../../utils/cookie.js';
 import musicKey from '../../utils/music_key.js';
 import progressBar from 'base/progressBar';
 import progressCircle from 'base/progressCircle';
+import { playMode } from 'common/js/config';
+import { shuffle } from 'common/js/util';
 const transform = prefixStyle('transform');
 export default {
   components: {
@@ -139,7 +141,12 @@ export default {
     percent() {
       return this.currentTime / this.currentSong.duration;
     },
-    ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing', 'currentIndex'])
+    iconMode() {
+      return this.mode === playMode.sequence
+        ? 'icon-sequence'
+        : this.mode === playMode.loop ? 'icon-loop' : 'icon-random';
+    },
+    ...mapGetters(['fullScreen', 'playList', 'currentSong', 'playing', 'currentIndex', 'mode', 'sequenceList'])
   },
   methods: {
     back() {
@@ -288,6 +295,19 @@ export default {
       }
       this.songReady = false;
     },
+    // 循环播放
+    loop() {
+      this.$refs.audio.currentTime = 0;
+      this.playSong();
+    },
+    // 当前播放结束后
+    end() {
+      if (this.mode === playMode.loop) {
+        this.loop();
+      } else {
+        this.next();
+      }
+    },
     // 当前播放时间 实现播放进度
     updateTime(e) {
       this.currentTime = e.target.currentTime;
@@ -311,16 +331,41 @@ export default {
       this.$refs.audio.currentTime = this.currentSong.duration * percent;
       if (!this.playing) this.togglePlaying();
     },
+    // 播放类型change
+    changeMode() {
+      const mode = (this.mode + 1) % 3;
+      this.setPlayMode(mode);
+      let list = null;
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList);
+      } else {
+        list = this.sequenceList;
+      }
+      this.resetCurrentIndex(list);
+      this.setPlayList(list);
+    },
+    resetCurrentIndex(list) {
+      let index = list.findIndex(item => {
+        return item.id === this.currentSong.id;
+      });
+      this.setCurrentIndex(index);
+    },
+
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAYLIST'
     })
   },
   watch: {
-    currentSong(val) {
-      this.$set(this.params, 'songtype', [val.songType]);
-      this.$set(this.params, 'songmid', [val.songmid]);
+    currentSong(newVal, oldVal) {
+      if (newVal.id === oldVal.id) {
+        return;
+      }
+      this.$set(this.params, 'songtype', [newVal.songType]);
+      this.$set(this.params, 'songmid', [newVal.songmid]);
       this.$nextTick(() => {
         this._getSingerUrl();
       });
