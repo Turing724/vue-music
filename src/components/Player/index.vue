@@ -20,6 +20,13 @@
               </div>
             </div>
           </div>
+          <Scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p class="text" :class="{'current':currentLineNum === index}" ref="lyricLine" v-for="(line,index) in currentLyric.lines" :key="index">{{line.txt}}</p>
+              </div>
+            </div>
+          </Scroll>
         </div>
         <div class="bottom">
           <div class="progress-wrapper">
@@ -85,11 +92,14 @@ import progressBar from 'base/progressBar';
 import progressCircle from 'base/progressCircle';
 import { playMode } from 'common/js/config';
 import { shuffle } from 'common/js/util';
+import Lyric from 'lyric-parser';
+import Scroll from 'base/Scroll';
 const transform = prefixStyle('transform');
 export default {
   components: {
     progressBar,
-    progressCircle
+    progressCircle,
+    Scroll
   },
   data() {
     return {
@@ -122,7 +132,9 @@ export default {
       playUrl: [],
       songReady: false,
       currentTime: 0,
-      radius: 32
+      radius: 32,
+      currentLyric: null,
+      currentLineNum: 0
     };
   },
   computed: {
@@ -350,7 +362,24 @@ export default {
       });
       this.setCurrentIndex(index);
     },
-
+    getLyric() {
+      this.currentSong.getLyric().then(lyric => {
+        this.currentLyric = new Lyric(lyric, this.handlerLyric);
+        if (this.playing) {
+          this.currentLyric.play();
+        }
+        console.log(this.currentLyric);
+      });
+    },
+    handlerLyric({ lineNum, txt }) {
+      this.currentLineNum = lineNum;
+      if (lineNum > 5) {
+        let lineEl = this.$refs.lyricLine[lineNum - 5];
+        this.$refs.lyricList.scrollToElement(lineEl, 1000);
+      } else {
+        this.$refs.lyricList.scrollTo(0, 0, 1000);
+      }
+    },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
@@ -368,6 +397,7 @@ export default {
       this.$set(this.params, 'songmid', [newVal.songmid]);
       this.$nextTick(() => {
         this._getSingerUrl();
+        this.getLyric();
       });
     },
     playing(newVal) {

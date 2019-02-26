@@ -1,3 +1,8 @@
+import { getLyric } from 'api/song';
+import { ERR_OK } from 'api/config';
+import { timingSafeEqual } from 'crypto';
+import { Base64 } from 'js-base64';
+
 export default class Song {
   constructor({ id, mid, singer, name, album, duration, image, url, songType }) {
     this.id = id;
@@ -10,6 +15,21 @@ export default class Song {
     this.url = url;
     this.songmid = mid;
     this.songType = songType;
+  }
+  getLyric() {
+    if (this.lyric) {
+      return Promise.resolve(this.lyric);
+    }
+    return new Promise((resolve, reject) => {
+      getLyric(this.songmid).then(res => {
+        if (res.retcode === ERR_OK) {
+          this.lyric = Base64.decode(res.lyric);
+          resolve(this.lyric);
+        } else {
+          reject('no lyric');
+        }
+      });
+    });
   }
 }
 
